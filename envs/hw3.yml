@@ -1,0 +1,25 @@
+name: hw3
+
+channels:
+
+  - conda-forge
+
+  - bioconda
+
+  - defaults
+
+dependencies:
+
+  - python=3.11
+
+  - samtools
+
+  - bcftools
+
+  - matplotlib
+
+  - fastqc
+
+  - trimmomatic
+
+  - bwa
