@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3
+FROM anaconda/miniconda3
 
 
 RUN conda install -y -c bioconda -c conda-forge \
