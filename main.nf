@@ -58,27 +58,22 @@ workflow {
 
     reference_with_index = ref_ch
 
-        .map { ref -> tuple([id: 'reference'], ref) }
-
         .join(SAMTOOLS_FAIDX.out.fai)
 
-        .map { meta, reference, fai ->
+        .map { reference, fai ->
 
-            tuple(meta, reference, fai)
+            tuple(reference, fai)
 
         }
 
 
     bam_for_variants = mapped_ch.map { sample_id, bam, bai ->
 
-
         tuple(
 
             [id: sample_id],
 
             bam,
-
-            [],
 
             bai
 
