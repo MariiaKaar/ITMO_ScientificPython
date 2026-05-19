@@ -82,14 +82,14 @@ workflow {
     }
 
 
-//    BCFTOOLS_MPILEUP(
+    BCFTOOLS_MPILEUP(
 
-//        bam_for_variants,
+        bam_for_variants,
 
-//        reference_with_index,
+        reference_with_index,
 
-//        false
+        false
 
-//    )
+    )
 
 }
