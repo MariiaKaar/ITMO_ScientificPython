@@ -28,14 +28,14 @@ nextflow run main.nf \
 ```
 nextflow run main.nf \
   -profile cluster \
-  --reads "DRR_{1,2}.fastq" \
+  --samplesheet samples.csv \
   --reference ref_HV.fna
 ```
 3) container 
 ```
 nextflow run main.nf \
   -profile container \
-  --reads "DRR_{1,2}.fastq" \
+  --samplesheet samples.csv \
   --reference ref_HV.fna
 ``` 
 ## Example data 
