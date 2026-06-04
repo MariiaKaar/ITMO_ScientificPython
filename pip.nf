@@ -1,8 +1,5 @@
 nextflow.enable.dsl=2
 
-// =====================
-// PARAMS
-// =====================
 params.reads     = null
 params.reference = null
 
@@ -12,7 +9,7 @@ params.reference = null
 process FASTQC {
 
     tag "$sample_id ($stage)"
-    cpus 8
+    cpus 4
 
     input:
     val stage
@@ -34,7 +31,7 @@ process FASTQC {
 process TRIM {
 
     tag "$sample_id"
-    cpus 8
+    cpus 4
 
     input:
     tuple val(sample_id), path(r1), path(r2)
@@ -54,65 +51,27 @@ process TRIM {
     """
 }
 
-// =====================
-// ASSEMBLY (fallback)
-// =====================
-process ASSEMBLE {
 
-    tag "assembly"
-    cpus 8
-
-    input:
-    tuple val(sample_id), path(r1), path(r2)
-
-    output:
-    path "contigs.fasta"
-
-    script:
-    """
-    spades.py -1 $r1 -2 $r2 -o spades_out -t ${task.cpus}
-    cp spades_out/contigs.fasta contigs.fasta
-    """
-}
 
 // =====================
-// INDEX REFERENCE
-// =====================
-process INDEX_REF {
-
-    tag "index"
-    cpus 8
-
-    input:
-    path ref
-
-    output:
-    path "ref.*"
-
-    script:
-    """
-    bwa index $ref
-    """
-}
-
-// =====================
-// MAPPING
+// MAP (FIXED)
 // =====================
 process MAP {
 
     tag "$sample_id"
-    cpus 8
+    cpus 4
 
     input:
     tuple val(sample_id), path(r1), path(r2)
     path ref
 
     output:
-    tuple val(sample_id), path("aligned.bam")
+    tuple val(sample_id), path("${sample_id}.sorted.bam")
 
     script:
     """
-    bwa mem -t ${task.cpus} $ref $r1 $r2 | samtools sort -@ ${task.cpus} -o aligned.bam
+    bwa index $ref
+    bwa mem -t ${task.cpus} $ref $r1 $r2 | samtools sort -@ ${task.cpus} -o ${sample_id}.sorted.bam
     """
 }
 
@@ -122,9 +81,10 @@ process MAP {
 process PLOT_COVERAGE {
 
     tag "$sample_id"
-    cpus 8
+    cpus 4
 
     conda 'bioconda::samtools=1.19 conda-forge::python=3.10 conda-forge::matplotlib=3.8.0'
+
     publishDir "results/coverage", mode: 'copy'
 
     input:
@@ -152,7 +112,6 @@ plt.plot(depths, linewidth=0.5)
 plt.title("Coverage: ${sample_id}")
 plt.xlabel("Position")
 plt.ylabel("Depth")
-plt.grid(True)
 plt.tight_layout()
 plt.savefig("${sample_id}_coverage.png", dpi=300)
 EOF
@@ -162,7 +121,7 @@ EOF
 }
 
 // =====================
-// FASTQC WRAPPERS (fix DSL2 reuse bug)
+// WORKFLOWS
 // =====================
 workflow FASTQC_RAW {
     take:
@@ -181,55 +140,34 @@ workflow FASTQC_TRIMMED {
 }
 
 // =====================
-// MAIN WORKFLOW (NAMED)
+// MAIN
 // =====================
 workflow main_pipeline {
 
-    // -----------------
-    // INPUT (LOCAL FASTQ ONLY)
-    // -----------------
     if (!params.reads) {
-        error "Provide --reads (paired FASTQ files)"
+        error "Provide --reads"
     }
 
-    reads_ch = Channel.fromPath(params.reads)
+    reads_ch = Channel
+        .fromFilePairs(params.reads,checkIfExists: true)
+        .map { sample_id, reads ->
+            tuple(sample_id, reads[0], reads[1])}
 
-    // -----------------
-    // QC RAW
-    // -----------------
     FASTQC_RAW(reads_ch)
 
-    // -----------------
-    // TRIM
-    // -----------------
     trimmed_ch = TRIM(reads_ch)
 
-    // -----------------
-    // QC TRIMMED
-    // -----------------
     FASTQC_TRIMMED(trimmed_ch)
 
-    // -----------------
-    // REFERENCE OR ASSEMBLY
-    // -----------------
-    if (params.reference) {
-        ref_ch = Channel.fromPath(params.reference)
-    } else {
-        ref_ch = ASSEMBLE(trimmed_ch)
+    if (!params.reference) {
+        error "Provide --reference (.fna supported)"
     }
 
-    // -----------------
-    // INDEX
-    // -----------------
-    INDEX_REF(ref_ch)
+    ref_ch = Channel.fromPath(params.reference)
 
-    // -----------------
-    // MAP
-    // -----------------
+
+
     mapped = MAP(trimmed_ch, ref_ch)
 
-    // -----------------
-    // COVERAGE PLOT
-    // -----------------
     PLOT_COVERAGE(mapped)
 }
