@@ -21,9 +21,9 @@ docker pull mashakrasha/hw3-nextflow:latest
 ```
 nextflow run main.nf \
   -profile local \
-  --reads "DRR_{1,2}.fastq" \
+  --samplesheet samples.csv \
   --reference ref_HV.fna
-```  
+```
 2) cluster
 ```
 nextflow run main.nf \
