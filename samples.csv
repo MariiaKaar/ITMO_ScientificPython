@@ -1,4 +1,3 @@
 sample_id,group,r1,r2,reference
-DRR1,virus_A,DRR1_1.fastq,DRR1_2.fastq,ref_HV.fna
-DRR2,virus_A,DRR2_1.fastq,DRR2_2.fastq,ref_HV.fna
-DRR3,virus_B,DRR3_1.fastq,DRR3_2.fastq,ref_HV.fna
+DRR_1,virus_A,DRR_1.fastq,DRR_2.fastq,ref_HV.fna
+DRR_2,virus_B,DRR_1.fastq,DRR_2.fastq,ref_HV.fna
