@@ -20,6 +20,7 @@ docker pull mashakrasha/hw3-nextflow:latest
 1) local
 ```
 nextflow run main.nf \
+    --reference ref_HV.fna
     -profile local \
     --samplesheet samples.csv \
     -stub-run
@@ -27,6 +28,7 @@ nextflow run main.nf \
 2) cluster
 ```
 nextflow run main.nf \
+  --reference ref_HV.fna
   -profile cluster \
   --samplesheet samples.csv 
 
@@ -34,6 +36,7 @@ nextflow run main.nf \
 3) container 
 ```
 nextflow run main.nf \
+  --reference ref_HV.fna
   -profile container \
   --samplesheet samples.csv 
 ``` 
